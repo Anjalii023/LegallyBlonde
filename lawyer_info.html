@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lawyer Dashboard - LegalAssist</title> <!-- Changed Title -->
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1a1a1a;
+            --card-bg: var(--secondary-bg);
+            --accent: #7E57C2;
+            --accent-hover: #673AB7;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --border-light: rgba(255, 255, 255, 0.1);
+            --gradient: linear-gradient(135deg, #7E57C2 0%, #673AB7 100%);
+            --bs-border-radius-lg: 1rem; /* Keep consistent radius */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Navbar Styling (Keep consistent) --- */
+        .navbar {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.8rem 1rem; /* Adjusted padding slightly */
+            position: sticky; /* Make navbar sticky */
+            top: 0;
+            z-index: 1030; /* Ensure it's above other content */
+        }
+
+        .navbar-brand.logo {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-right: auto; /* Push other items to the right */
+        }
+
+        .logo-icon {
+            color: var(--accent);
+            margin-right: 0.6rem;
+            font-size: 1.5rem;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Space between actions */
+        }
+
+        .notification-btn {
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            position: relative; /* For potential badge */
+            padding: 0.3rem 0.5rem;
+            transition: color 0.2s ease;
+        }
+        .notification-btn:hover {
+            color: var(--text-primary);
+        }
+        /* Basic notification badge example */
+        .notification-btn .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 0.6rem;
+            padding: 0.2em 0.4em;
+            transform: translate(40%, -40%); /* Adjust position slightly if needed */
+        }
+
+
+        /* --- Dashboard Area Styling --- */
+        .dashboard-container {
+            flex-grow: 1; /* Takes up remaining vertical space */
+            padding: 2rem 1.5rem; /* Padding around the main content */
+            display: grid;
+            /* Defining grid based loosely on the image structure */
+            grid-template-columns: 1fr 2fr 1.5fr; /* Adjust ratios as needed */
+            grid-template-rows: auto auto 1fr auto; /* Define rows */
+            gap: 1.5rem; /* Spacing between grid items */
+            grid-template-areas:
+                "profile lawyerinfo notifications"
+                "profile currentcases pastcases"
+                "profile completedcases ratings"
+                "profile winpercentage winpercentage";
+            max-width: 1200px; /* Max width for the dashboard content */
+            margin: 2rem auto; /* Center the container */
+        }
+
+        /* --- Grid Area Assignments --- */
+        .profile-section { grid-area: profile; }
+        .lawyer-info-section { grid-area: lawyerinfo; }
+        .notifications-section { grid-area: notifications; text-align: left; } /* MODIFIED: Default to left for card */
+        .current-cases-section { grid-area: currentcases; }
+        .past-cases-section { grid-area: pastcases; }
+        .completed-cases-section { grid-area: completedcases; }
+        .ratings-reviews-section { grid-area: ratings; }
+        .win-percentage-section { grid-area: winpercentage; }
+
+
+        /* --- Component Styling (using existing variables) --- */
+        .dashboard-card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--bs-border-radius-lg);
+            border: 1px solid var(--border-light);
+            height: 100%; /* Make cards fill grid cell height */
+            display: flex;
+            flex-direction: column;
+        }
+         .dashboard-card h5 {
+             font-size: 1.1rem;
+             font-weight: 600;
+             color: var(--text-primary);
+             margin-bottom: 0.8rem;
+             border-bottom: 1px solid var(--border-light);
+             padding-bottom: 0.6rem;
+             flex-shrink: 0; /* Prevent heading from shrinking */
+         }
+         .dashboard-card h5 i { /* Icon in heading */
+             color: var(--accent);
+             margin-right: 0.5rem;
+             font-size: 1rem; /* Adjust icon size */
+         }
+
+         .dashboard-card p, .dashboard-card .card-text {
+             font-size: 0.9rem;
+             color: var(--text-secondary);
+             line-height: 1.6;
+             margin-bottom: 0.5rem;
+             flex-grow: 1; /* Allow text to take space */
+         }
+         .dashboard-card .value-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: auto; /* Push value to bottom if needed */
+            text-align: center;
+            flex-shrink: 0; /* Prevent value display from shrinking */
+         }
+          .dashboard-card .value-display.small {
+             font-size: 1.4rem;
+          }
+
+
+        /* Profile Specific */
+        .profile-section .profile-pic-placeholder {
+            width: 120px;
+            height: 120px;
+            background-color: #333; /* Placeholder color */
+            border-radius: 0.8rem; /* Match card radius */
+            margin: 0 auto 1.5rem auto; /* Center and add bottom margin */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* For actual image */
+            border: 2px solid var(--border-light);
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .profile-section .profile-pic-placeholder img {
+             width: 100%;
+             height: 100%;
+             object-fit: cover;
+        }
+        /* Simulate the placeholder image from the hint */
+        .profile-pic-placeholder.default-bg {
+            background: linear-gradient(to bottom, #a0d2eb 50%, #87c38f 50%); /* Sky and grass */
+            position: relative;
+        }
+        .profile-pic-placeholder.default-bg::before { /* Cloud */
+             content: '\f0c2'; /* Font Awesome cloud icon */
+             font-family: 'Font Awesome 6 Free';
+             font-weight: 900;
+             color: white;
+             font-size: 2.5rem;
+             position: absolute;
+             top: 20%;
+             left: 50%;
+             transform: translateX(-50%);
+        }
+
+
+        .profile-section .lawyer-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .profile-section .lawyer-specialty {
+             font-size: 0.95rem;
+             color: var(--text-secondary);
+             text-align: center;
+             margin-bottom: 1.5rem;
+        }
+        .profile-section .btn-profile {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            width: 100%;
+            margin-top: auto; /* Pushes button to bottom */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .profile-section .btn-profile:hover {
+             background: var(--accent-hover);
+             border-color: var(--accent-hover);
+        }
+
+        /* Case Section Specific */
+        .case-link {
+             display: block;
+             color: var(--accent);
+             text-decoration: none;
+             font-weight: 500;
+             font-size: 0.9rem;
+             margin-top: auto; /* Push link to bottom */
+             transition: color 0.2s ease;
+             flex-shrink: 0; /* Prevent link from shrinking */
+        }
+        .case-link:hover {
+             color: var(--accent-hover);
+             text-decoration: underline;
+        }
+
+        /* Ratings Specific */
+        .rating-stars {
+            color: #FFC107; /* Yellow for stars */
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .rating-count {
+             font-size: 0.85rem;
+             color: var(--text-secondary);
+             text-align: center;
+             margin-bottom: 1rem;
+             flex-shrink: 0;
+        }
+
+        /* --- Notifications Card Specific Styling (NEW) --- */
+        .notifications-section.dashboard-card {
+            /* Allow internal scrolling if content exceeds card height */
+            overflow-y: auto;
+            /* Set a max-height to prevent the card from becoming too tall */
+            /* Adjust this value based on your desired appearance */
+            max-height: 400px; /* Example: Adjust as needed */
+        }
+
+        .notification-list {
+            padding-left: 0; /* Remove default ul padding */
+            list-style: none;
+            margin-bottom: 0 !important; /* Override Bootstrap */
+            flex-grow: 1; /* Takes up space */
+            overflow-y: auto; /* Allows scrolling *within* the list if needed, though card overflow is primary*/
+        }
+
+        .notification-list li {
+            padding: 0.75rem 0.2rem 0.75rem 0; /* Padding top/bottom/right */
+            border-bottom: 1px solid var(--border-light); /* Separator line */
+        }
+
+        .notification-list li:last-child {
+            border-bottom: none; /* No line after the last item */
+            padding-bottom: 0;
+        }
+
+        .notification-item-text {
+            font-size: 0.85rem; /* Slightly smaller text */
+            color: var(--text-secondary);
+            margin-bottom: 0.3rem !important; /* Reduce space before chat link */
+            line-height: 1.4;
+        }
+
+        .chat-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.8rem; /* Smaller than case-link */
+            transition: color 0.2s ease;
+            display: inline-block; /* Ensure margin works properly */
+        }
+        .chat-link i {
+            font-size: 0.75rem; /* Smaller icon */
+        }
+
+        .chat-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* --- Notification Bar Styling --- */
+        .notification-bar {
+            background-color: var(--accent); /* Use accent color for attention */
+            color: white; /* Contrast text */
+            padding: 0.75rem 1.5rem; /* Added side padding for content */
+            margin-top: 2rem; /* Space above the footer */
+            width: 100%; /* Span full width */
+            flex-shrink: 0; /* Prevent shrinking when body is flex */
+        }
+        .notification-bar .container-fluid { /* Use fluid container */
+            max-width: 1200px; /* Align content with dashboard container */
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 0; /* Remove container padding */
+            padding-right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 0.5rem; /* Space between text and button if they wrap */
+        }
+
+        .notification-bar .notification-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .notification-bar .chat-now-btn {
+            background-color: white;
+            color: var(--accent);
+            border: none;
+            font-weight: 600;
+            padding: 0.4rem 1rem; /* Adjust button padding */
+            border-radius: 0.5rem; /* Slightly rounded corners */
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .notification-bar .chat-now-btn:hover {
+            background-color: #e9ecef; /* Slightly off-white hover */
+            color: var(--accent-hover);
+        }
+
+        /* --- Footer Styling (Keep consistent) --- */
+        footer {
+            background-color: #000; /* Slightly darker than main bg */
+            padding: 1.5rem 0; /* Reduced padding */
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            width: 100%;
+            flex-shrink: 0; /* Prevent shrinking when body is flex */
+        }
+        .footer-text {
+             color: var(--text-secondary);
+             font-size: 0.9rem;
+        }
+
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr 1.5fr; /* Adjust columns for medium screens */
+                grid-template-rows: auto auto auto auto auto auto; /* Adjust rows */
+                grid-template-areas:
+                    "profile notifications" /* Notifications now on top right */
+                    "lawyerinfo ratings"
+                    "currentcases pastcases"
+                    "completedcases completedcases"
+                    "winpercentage winpercentage";
+                 padding: 1.5rem 1rem;
+                 gap: 1rem;
+                 margin-bottom: 1rem; /* Adjust margin */
+            }
+            /* No need to reset alignment for notifications section now */
+            .notifications-section.dashboard-card {
+                max-height: 300px; /* Adjust max height for smaller layouts */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr; /* Single column layout */
+                grid-template-rows: auto; /* Auto rows */
+                grid-template-areas: /* Stack everything */
+                    "profile"
+                    "notifications" /* Notifications often useful near top */
+                    "lawyerinfo"
+                    "ratings"
+                    "currentcases"
+                    "pastcases"
+                    "completedcases"
+                    "winpercentage";
+                 padding: 1rem 0.8rem;
+                 margin: 1rem auto 1rem auto; /* Reduce top/bottom margin */
+            }
+            .profile-section .profile-pic-placeholder {
+                 width: 100px;
+                 height: 100px;
+            }
+            .dashboard-card { padding: 1rem; }
+             .dashboard-card h5 { font-size: 1rem; }
+             .dashboard-card .value-display { font-size: 1.5rem; }
+             .navbar-actions { gap: 0.5rem; } /* Reduce gap */
+             .navbar-brand.logo { font-size: 1.2rem;}
+             .logo-icon { font-size: 1.3rem; }
+
+            /* Notification Card on Mobile */
+             .notifications-section.dashboard-card {
+                 max-height: 250px; /* Further adjust max height */
+             }
+
+            /* Notification Bar on Mobile */
+             .notification-bar .container-fluid {
+                 flex-direction: column; /* Stack elements */
+                 text-align: center;
+                 gap: 0.75rem; /* Add space between stacked items */
+             }
+             .notification-bar {
+                 padding: 1rem;
+                 margin-top: 1.5rem;
+             }
+             .notification-bar .chat-now-btn {
+                 width: 80%; /* Make button wider */
+                 max-width: 250px;
+             }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <nav class="navbar sticky-top">
+        <div class="container-fluid"> <!-- Use fluid for full width -->
+            <a class="navbar-brand logo" href="#"> <!-- Link to lawyer dashboard home -->
+                <i class="fas fa-balance-scale logo-icon"></i>
+                Legal Assist
+            </a>
+            <div class="navbar-actions">
+                 <!-- Notification Button/Area -->
+                 <button class="notification-btn" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Notifications">
+                     <i class="fas fa-bell"></i>
+                     <!-- Example Badge: Uncommented and showing '3' -->
+                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                         3
+                         <span class="visually-hidden">unread notifications</span>
+                     </span>
+                 </button>
+
+                <!-- Sign Out Button -->
+                <button class="btn btn-sm btn-outline-light" id="logout-button">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Content -->
+    <div class="dashboard-container">
+
+        <!-- Profile Section (Left) -->
+        <div class="profile-section dashboard-card">
+            <div class="profile-pic-placeholder default-bg">
+                <!-- Cloud is added via ::before pseudo-element -->
+                <!-- <img src="path/to/lawyer-photo.jpg" alt="Profile Picture"> -->
+            </div>
+            <h4 class="lawyer-name">Jane Doe Esq.</h4>
+            <p class="lawyer-specialty">Family Law Specialist</p>
+            <p class="card-text">Brief bio or status update area can go here. Member since 2024.</p>
+            <button class="btn btn-profile">Edit Profile</button>
+        </div>
+
+        <!-- Layer Info Section -->
+        <div class="lawyer-info-section dashboard-card">
+             <h5><i class="fas fa-info-circle"></i>Lawyer Info</h5>
+             <p><strong>Bar Number:</strong> #1234567</p>
+             <p><strong>Location:</strong> New York, NY</p>
+             <p><strong>Contact:</strong> jane.doe@email.com</p>
+             <p><strong>Status:</strong> Accepting New Cases</p>
+        </div>
+
+         <!-- Notifications Section (CHANGED to Card) -->
+         <div class="notifications-section dashboard-card"> <!-- Apply card style -->
+            <h5><i class="fas fa-bell"></i>Notifications</h5>
+            <ul class="list-unstyled notification-list mb-0"> <!-- List for notifications -->
+                <li>
+                    <p class="notification-item-text mb-1">
+                        New client inquiry: John Smith regarding divorce proceedings. Needs urgent consultation.
+                    </p>
+                    <a href="#chat-john-smith" class="chat-link"> <!-- Example href -->
+                        <i class="fas fa-comments me-1"></i>Chat Now
+                    </a>
+                </li>
+                <li>
+                    <p class="notification-item-text mb-1">
+                        Case update: Hearing scheduled for Davis v. Miller (Case #1123) on 2024-08-15. Document submission required by 2024-08-10.
+                    </p>
+                    <a href="#chat-case-1123" class="chat-link"> <!-- Example href -->
+                         <i class="fas fa-comments me-1"></i>Chat Now
+                    </a>
+                </li>
+                 <li>
+                    <p class="notification-item-text mb-1">
+                        Reminder: Deadline for filing motion in Adams case is tomorrow. Please review attached draft.
+                    </p>
+                    <a href="#chat-adams-case" class="chat-link"> <!-- Example href -->
+                         <i class="fas fa-comments me-1"></i>Chat Now
+                    </a>
+                </li>
+                <li>
+                    <p class="notification-item-text mb-1">
+                        System Alert: Your profile completeness is 80%. Consider adding recent case examples.
+                    </p>
+                    <a href="#profile-edit" class="chat-link"> <!-- Link to profile edit instead -->
+                         <i class="fas fa-user-edit me-1"></i>Update Profile
+                    </a>
+                </li>
+                <li>
+                    <p class="notification-item-text mb-1">
+                        New message received from client Sarah Lee regarding Case #0987.
+                    </p>
+                    <a href="#chat-sarah-lee" class="chat-link"> <!-- Example href -->
+                         <i class="fas fa-comments me-1"></i>Chat Now
+                    </a>
+                </li>
+                <!-- Add more notifications dynamically here -->
+            </ul>
+            <!-- Optional: Add a "View All" link if needed at the bottom of the card -->
+             <!-- <a href="#" class="case-link mt-3 d-block text-center flex-shrink-0">View All Notifications</a> -->
+         </div>
+
+        <!-- Current Cases -->
+        <div class="current-cases-section dashboard-card">
+            <h5><i class="fas fa-folder-open"></i>Current Cases</h5>
+            <p class="card-text">Overview of ongoing cases. Display count or brief list.</p>
+            <div class="value-display small">5</div>
+            <a href="#" class="case-link">View Current Cases</a>
+        </div>
+
+        <!-- Past Cases -->
+        <div class="past-cases-section dashboard-card">
+            <h5><i class="fas fa-history"></i>Past Cases</h5>
+             <p class="card-text">Summary of recently closed cases.</p>
+             <div class="value-display small">23</div>
+             <a href="#" class="case-link">View Past Cases</a>
+        </div>
+
+        <!-- Completed Cases -->
+        <div class="completed-cases-section dashboard-card">
+            <h5><i class="fas fa-check-circle"></i>Completed Cases</h5>
+            <p class="card-text">Total number of successfully completed cases via platform.</p>
+             <div class="value-display small">18</div>
+             <a href="#" class="case-link">View Completed</a>
+        </div>
+
+        <!-- Rating & Reviews -->
+        <div class="ratings-reviews-section dashboard-card">
+             <h5><i class="fas fa-star"></i>Rating & Reviews</h5>
+             <div class="rating-stars">
+                 <i class="fas fa-star"></i>
+                 <i class="fas fa-star"></i>
+                 <i class="fas fa-star"></i>
+                 <i class="fas fa-star"></i>
+                 <i class="fas fa-star-half-alt"></i>
+             </div>
+             <p class="rating-count">(Based on 15 reviews)</p>
+             <a href="#" class="case-link">Manage Reviews</a>
+        </div>
+
+        <!-- Win Percentage -->
+        <div class="win-percentage-section dashboard-card">
+             <h5><i class="fas fa-percentage"></i>Win Percentage</h5>
+             <p class="card-text">Based on reported outcomes of completed cases.</p>
+             <div class="value-display">85%</div>
+        </div>
+
+    </div> <!-- End Dashboard Container -->
+
+    <!-- Notification/Chat Bar -->
+    <div class="notification-bar">
+        <div class="container-fluid"> <!-- Use container-fluid for content alignment -->
+            <span class="notification-text">
+                <i class="fas fa-headset me-2"></i> Have questions about your account or need support?
+            </span>
+            <button class="btn btn-sm chat-now-btn">
+                <i class="fas fa-comments me-1"></i> Chat Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p class="footer-text mb-0">© 2025 LegalAssist Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enable Bootstrap Tooltips (for notification button)
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Logout Handler (Keep consistent)
+        const logoutButton = document.getElementById('logout-button');
+        if(logoutButton){
+            logoutButton.addEventListener('click', () => {
+                console.log('Logout initiated...');
+                // Redirect to a login or public home page
+                window.location.href = 'index.html'; // Or lawyer_login.html
+            });
+        }
+
+        // --- Placeholder for Dynamic Notification Update ---
+        // In a real app, you would fetch notification count here
+        // and update the badge content and visibility.
+        // You would also fetch the actual notifications and populate
+        // the .notification-list dynamically.
+        // Example for badge:
+        // const notificationCount = 5; // Fetch this value
+        // const badgeElement = document.querySelector('.notification-btn .badge');
+        // if (badgeElement) {
+        //    const badgeNumberElement = badgeElement.childNodes[0]; // Get the text node
+        //    if (notificationCount > 0) {
+        //        badgeNumberElement.nodeValue = notificationCount + " "; // Update count (add space for screen reader text)
+        //        badgeElement.style.display = ''; // Ensure visible
+        //    } else {
+        //        badgeElement.style.display = 'none'; // Hide if 0
+        //    }
+        // }
+
+    </script>
+</body>
+</html>
